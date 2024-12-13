@@ -11,7 +11,7 @@ from torch import Tensor
 from torch_geometric.data import Data, Dataset, download_url, extract_zip
 import numpy as np
 from megaflow.common.utils import process_file_list, update_progress, copy_group, merge_hdf5_files
-
+import pdb
 IndexType = Union[slice, Tensor, np.ndarray, Sequence]
 
 class MegaFlow2D(Dataset):
@@ -176,13 +176,14 @@ class MegaFlow2D(Dataset):
         # redo data list
         
     def transform(self, data):
-        (data_l, data_h) = data
         if self.transforms == 'error_estimation':
+            (data_l, data_h) = data
             data_l.y = data_l.y - data_l.x
         if self.transforms == 'normalize':
             # normalize the data layer-wise via gaussian distribution
+            (data_l, data_h) = data
             data_l.x = (data_l.x - data_l.x.mean(dim=0)) / (data_l.x.std(dim=0) + 1e-8)
-            data_h.x = (data_h.y - data_l.x.mean(dim=0)) / (data_l.x.std(dim=0) + 1e-8)
+            data_h.x = (data_h.x - data_h.x.mean(dim=0)) / (data_h.x.std(dim=0) + 1e-8)
         return (data_l, data_h)
 
     def get(self, idx):
@@ -216,12 +217,15 @@ class MegaFlow2D(Dataset):
         if (isinstance(idx, (int, np.integer))
                 or (isinstance(idx, Tensor) and idx.dim() == 0)
                 or (isinstance(idx, np.ndarray) and np.isscalar(idx))):
-
-            data_l, data_h = self.get(self.indices()[idx])
-            data_l = data_l if self.transform is None else self.transform(data_l)
+            data = self.get(self.indices()[idx])
+            if self.transforms is None:
+                data_l,data_h = data
+            else:
+                data_l,data_h = self.transform(data)
             return (data_l, data_h)
 
         else:
+            print("using an index select")
             return self.index_select(idx)
 
     def get_eval(self, idx):
@@ -249,3 +253,16 @@ class MegaFlow2DSubset(MegaFlow2D):
     """
     def __init__(self, root, indices, transform=None):
         raise NotImplementedError
+class MegaFlow2DFromSplitH5(MegaFlow2D):      
+    #override parent property
+    @MegaFlow2D.get_data_list.getter
+    def get_data_list(self):
+        _data_list = []
+        with h5py.File(self.root+'/processed/data.h5', 'r') as hf:
+        # loop on group names at root level
+            gen = (group for group in hf.keys())
+            for group in gen:        
+                tsteps = hf[group].keys()
+                for step in tsteps:
+                    _data_list.append(group + '_' + step)
+        return _data_list

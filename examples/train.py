@@ -1,8 +1,12 @@
+import sys
+sys.path.insert(0, '/home/cbmiller/Repos/MegaFlow2D_Fork/examples')
+sys.path.insert(0, '/home/cbmiller/Repos/MegaFlow2D_Fork')
 import os
 import numpy as np
 import torch
 from torch_geometric.loader import DataLoader
 from utils import *
+import pdb
 
 from torch.utils.tensorboard import SummaryWriter
 
@@ -73,6 +77,7 @@ def main():
         avg_loss = 0
         avg_accuracy = 0
         for batch in train_dataloader:
+            batch = batch[0]
             batch = batch.to(device)
             optimizer.zero_grad()
             pred = model(batch)
