@@ -40,6 +40,9 @@ def initialize_dataset(dataset, split_scheme, dir, transform, pre_transform, spl
     if dataset == 'MegaFlow2D':
         dataset = MegaFlow2D(root=dir, download=False, split_scheme=split_scheme, transform=transform, pre_transform=pre_transform, split_ratio=split_ratio)
         print('Dataset initialized')
+    elif dataset == 'MegaFlow2DFromSplitH5':
+        dataset = MegaFlow2DFromSplitH5(root=dir, download=False, split_scheme=split_scheme, transform=transform, pre_transform=pre_transform, split_ratio=split_ratio)
+        print('Dataset initialized')
     else:
         raise ValueError('Unknown dataset: {}'.format(dataset))
     return dataset
@@ -90,6 +93,7 @@ def evaluate_model(model, dataloader, logger, iteration, loss_fn, eval_metric, d
         avg_metric = 0
 
         for batch in dataloader:
+            batch = batch[0]
             batch = batch.to(device)
             pred = model(batch)
             loss = loss_fn(batch.y, pred)
