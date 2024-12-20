@@ -5,6 +5,7 @@ import torch
 from model.model import *
 from megaflow.dataset.MegaFlow2D import *
 from metrics import *
+from torch_geometric.nn import GAE, VGAE
 
 
 def get_cur_time():
@@ -30,6 +31,10 @@ def initialize_model(in_channel, out_channel, type, layers, num_filters):
         model = FlowMLConvolution(in_channel, out_channel, layers, num_filters)
     elif type == 'FlowMLError':
         model = FlowMLError(in_channel, out_channel)
+    elif type == 'FlowML_GAE_Default':
+        model = GAE(FlowMLConvolution(in_channel, out_channel, layers, num_filters))
+    elif type == 'FlowML_GAE_FlowDecode':
+        model = GAE(FlowMLConvolution(in_channel, out_channel, layers, num_filters),FlowMLConvolution(out_channel, in_channel, layers, num_filters))
     else:
         raise ValueError('Unknown model type: {}'.format(type))
     return model

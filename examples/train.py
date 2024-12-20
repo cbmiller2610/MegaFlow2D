@@ -65,8 +65,8 @@ def main():
     optimizer = torch.optim.Adam(model.parameters(), lr=train_lr)
 
     # setup tensorboard
-    logdir = '../train/logs/{}'.format(get_cur_time())
-    savedir = '../train/checkpoints/{}'.format(get_cur_time())
+    logdir = './train/logs/{}'.format(get_cur_time())
+    savedir = './train/checkpoints/{}'.format(get_cur_time())
     os.makedirs(logdir, exist_ok=True)
     os.makedirs(savedir, exist_ok=True)
     writer_logs = SummaryWriter(logdir)
@@ -94,8 +94,8 @@ def main():
 
         writer_logs.add_scalar('Loss/train', avg_loss, epoch)
         writer_logs.add_scalar('Max_div/train', avg_accuracy, epoch)
-        # evaluate model with validation set every 25 epochs and save checkpoint
-        if epoch % 25 == 0:
+        # evaluate model with validation set every 5 epochs and save checkpoint
+        if epoch % 5 == 0:
             evaluate_model(model, val_dataloader, writer_logs, epoch, loss_fn, metric_fn, device, mode='val')
             checkpoint_save(model, savedir, epoch)
 
