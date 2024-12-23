@@ -11,7 +11,7 @@ import pdb
 from torch.utils.tensorboard import SummaryWriter
 
 
-def main():
+def main(**kwargs):
     # read command line arguments
     args = parse_args()
     model_name = args.model
@@ -77,13 +77,14 @@ def main():
         avg_loss = 0
         avg_accuracy = 0
         for batch in train_dataloader:
-            batch = batch[0]
-            batch = batch.to(device)
+            #NOTE: lowresbatch contains what we need, x is lowres results, y is highres results interp'd on lowres mesh.
+            lowresbatch,highresbatch = batch
+            lowresbatch = lowresbatch.to(device)
             optimizer.zero_grad()
-            pred = model(batch)
-            loss = loss_fn(batch.y, pred)
+            pred = model(lowresbatch)
+            loss = loss_fn(lowresbatch.y, pred)
             avg_loss += loss.item()
-            avg_accuracy += metric_fn(batch.y, pred)
+            avg_accuracy += metric_fn(lowresbatch.y, pred)
             loss.backward()
             optimizer.step()
             # print('Epoch: {:03d}, Batch: {:03d}, Loss: {:.4f}, Accuracy metric: {:4f}'.format(epoch, batch.batch[-1], loss.item(), metric_fn(batch.y, pred)))
